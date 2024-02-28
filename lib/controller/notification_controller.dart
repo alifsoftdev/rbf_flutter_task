@@ -1,20 +1,22 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Response;
 import 'package:rbf_flutter_task/global/constants/app_constants.dart';
 import 'package:rbf_flutter_task/global/methods/methods.dart';
 import 'package:rbf_flutter_task/models/notification_model/login_model.dart';
 import 'package:rbf_flutter_task/models/notification_model/notification_model.dart';
 import 'package:rbf_flutter_task/screen/home_screen.dart';
 
-import '../models/notification_model/notification_model.dart';
+import '../models/notification_model/result_model.dart';
+
 
  class NotificationController extends GetxController {
    RxBool pNotificationLoading = false.obs;
-   RxBool nEdite=false.obs;
+   RxBool nEdite=true.obs;
    RxString readStatus="".obs;
    RxList<int> selectedIndices = <int>[].obs;
-   RxBool isMasterCheckboxSelected = false.obs;
 
    var selectedIndex = -1.obs;
    /// Notification Edite
@@ -57,6 +59,8 @@ import '../models/notification_model/notification_model.dart';
    Rx<TextEditingController> username=TextEditingController().obs;
    Rx<TextEditingController> password=TextEditingController().obs;
 
+   LoginModel? loginModel;
+
    Future<void> loginUser(context) async {
      try {
        Dio dio = Dio();
@@ -70,18 +74,12 @@ import '../models/notification_model/notification_model.dart';
 
        if (loginResponse.statusCode == 200) {
          // Parse the response using the LoginModel
-         LoginModel loginModel = LoginModel.fromJson(loginResponse.data);
-         if (loginModel.status == "success") {
-           // Login successful
-           Get.snackbar('Success', 'Login successful');
-           // You can access user details and token using loginModel.data
-           print("User ID: ${loginModel.data.userDetails.id}");
-           print("Token: ${loginModel.data.token}");
-         } else {
-           // Login failed
-           Get.snackbar('Error', loginModel.message);
-           goPage(context, HomeScreen());
-         }
+          loginModel = LoginModel.fromJson(loginResponse.data);
+          Get.snackbar('Success', 'Login successful');
+          // You can access user details and token using loginModel.data
+          print("User ID: ${loginModel?.data.userDetails.id}");
+          print("Token: ${loginModel?.data.token}");
+          goPage(context, HomeScreen());
        } else {
          // Handle other status codes
          Get.snackbar('Error', 'Login failed with status code ${loginResponse.statusCode}');
@@ -92,7 +90,9 @@ import '../models/notification_model/notification_model.dart';
      }
    }
 
-   /// Get Notification
+
+
+/*   /// Get Notification
    // RxList<NotificationMode> notificationList = <NotificationModel.Result>[].obs;
    RxList<Result> notificationList = <Result>[].obs;
    RxBool isAllSelected = false.obs;
@@ -172,5 +172,119 @@ import '../models/notification_model/notification_model.dart';
    void loadMore() {
      currentPage++;
      loadNotifications();
+   }*/
+   //var notifications = [].obs;
+   var notifications = <NotificationResult>[].obs;
+   var currentPage = 1.obs;
+   var loading = false.obs;
+
+   @override
+   void onInit() {
+     super.onInit();
+     loadNotifications();
    }
+
+   Future<void> loadNotifications() async {
+     if (loading.value) return;
+
+     loading.value = true;
+
+     update();
+
+     try {
+       Dio dio = Dio();
+       dio.options.headers['Authorization'] = 'Bearer ${loginModel?.data.token}';
+       final response = await dio.get(
+         "${AppConstants.baseUrl}get_notification?page=${currentPage.value}&pageSize=10",
+       );
+
+       if (response.statusCode == 200) {
+         NotificationModel notificationModel = NotificationModel.fromJson(response.data);
+         notifications.addAll(notificationModel.data?.results ?? []);
+         // Initialize checkbox states
+         checkboxStates.addAll(List.generate(notifications.length, (index) => false));
+         isMasterCheckboxSelected.value = false;
+
+         currentPage.value++;
+       } else {
+         print("Failed to load notifications. Status code: ${response.statusCode}");
+       }
+     } catch (error, stackTrace) {
+       log("An error occurred: $error", error: error, stackTrace: stackTrace);
+     } finally {
+       loading.value = false;
+     }
+   }
+
+   Future<void> refreshNotifications() async {
+     if (loading.value) return;
+
+     loading.value = true;
+     try {
+       Dio dio = Dio();
+       dio.options.headers['Authorization'] = 'Bearer ${loginModel?.data.token}';
+       var response = await dio.get(
+         "${AppConstants.baseUrl}get_notification?page=1&pageSize=10",
+       );
+
+       if (response.statusCode == 200) {
+         NotificationModel notificationModel = NotificationModel.fromJson(response.data);
+         notifications.assignAll(notificationModel.data?.results ?? []);
+         currentPage.value = 2;
+       } else {
+         print("Failed to load notifications. Status code: ${response.statusCode}");
+       }
+     } catch (error) {
+       print("An error occurred: $error");
+     } finally {
+       loading.value = false;
+     }
+   }
+   RxBool isMasterCheckboxSelected = false.obs;
+   RxList<bool> checkboxStates = <bool>[].obs;
+
+   //var notifications = <NotificationResult>[].obs;
+
+   // ... (rest of the code)
+
+   void toggleMasterCheckbox() {
+     isMasterCheckboxSelected.value = !isMasterCheckboxSelected.value;
+
+     // If master checkbox is unselected, unselect all checkboxes
+     if (!isMasterCheckboxSelected.value) {
+       checkboxStates.assignAll(List.generate(notifications.length, (index) => false));
+     } else {
+       // If master checkbox is selected, select all checkboxes
+       checkboxStates.assignAll(List.generate(notifications.length, (index) => true));
+     }
+   }
+
+   void toggleCheckbox(int index) {
+     checkboxStates[index] = !checkboxStates[index];
+
+     // If any checkbox is unselected, unselect master checkbox
+     isMasterCheckboxSelected.value = checkboxStates.every((state) => state == true);
+   }
+
+   void markSelectedAsRead() {
+     // Get the indices of selected checkboxes
+     List<int> selectedIndices = List.generate(checkboxStates.length, (index) => index)
+         .where((index) => checkboxStates[index])
+         .toList();
+
+     // Mark selected notifications as read
+     selectedIndices.forEach((index) {
+       // You can add the logic to mark the notification as read, make an API call here
+       notifications[index].readStatus = "Read";
+     });
+
+     // Clear selection after marking as read
+     clearSelection();
+   }
+
+   void clearSelection() {
+     isMasterCheckboxSelected.value = false;
+     checkboxStates.assignAll(List.generate(notifications.length, (index) => false));
+   }
+
  }

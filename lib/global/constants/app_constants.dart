@@ -17,7 +17,6 @@ class AppConstants{
 
   //API Base Url
   static const String baseUrl="http://sherpur.rbfgroupbd.com/";
-
   static const String theme = 'theme';
   static const String countryCode = 'country_code';
   static const String languageCode = 'language_code';

@@ -9,11 +9,12 @@ import 'package:rbf_flutter_task/screen/notification/notification_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   static const String id = "HomeScreen";
-  const HomeScreen({super.key});
+
 
   @override
   Widget build(BuildContext context) {
     NotificationController notificationController=Get.find<NotificationController>();
+
     return Scaffold(
       backgroundColor: ColorResources.colorGreyWhite,
       appBar: AppBar(
@@ -26,12 +27,12 @@ class HomeScreen extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
               IconButton(onPressed: (){
-                goPage(context, const NotificationScreen());
+                goPage(context, NotificationScreen());
               }, icon: Icon(Icons.notifications_none,size: 25.r,),),
               Positioned(
                   top: 6.h,
                   right: 3.w,
-                  child:const CustomNotification(count: 5)),
+                  child: CustomNotification(count: notificationController.selectedIndex)),
             ],),
           )
         ],

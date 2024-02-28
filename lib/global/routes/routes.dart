@@ -6,7 +6,7 @@ import 'package:rbf_flutter_task/screen/notification/notification_screen.dart';
 
 
 var routes = <String, WidgetBuilder>{
-  HomeScreen.id: (_) => const HomeScreen(),
-  NotificationScreen.id: (_) => const NotificationScreen(),
+  HomeScreen.id: (_) =>  HomeScreen(),
+  NotificationScreen.id: (_) =>  NotificationScreen(),
   LoginPage.id: (_) =>  LoginPage(),
 };

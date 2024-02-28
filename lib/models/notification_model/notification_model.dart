@@ -1,126 +1,119 @@
-import 'package:meta/meta.dart';
-import 'dart:convert';
-
 class NotificationModel {
-  String status;
-  String message;
-  Error error;
-  Data data;
+  String? status;
+  String? message;
+  Error? error;
+  NotificationData? data;
 
-  NotificationModel({
-    required this.status,
-    required this.message,
-    required this.error,
-    required this.data,
-  });
+  NotificationModel({this.status, this.message, this.error, this.data});
 
-  factory NotificationModel.fromRawJson(String str) => NotificationModel.fromJson(json.decode(str));
+  NotificationModel.fromJson(Map<String, dynamic> json) {
+    status = json['status'];
+    message = json['message'];
+    error = json['error'] != null ? Error.fromJson(json['error']) : null;
+    data = json['data'] != null ? NotificationData.fromJson(json['data']) : null;
+  }
 
-  String toRawJson() => json.encode(toJson());
-
-  factory NotificationModel.fromJson(Map<String, dynamic> json) => NotificationModel(
-    status: json["status"]??"",
-    message: json["message"]??"",
-    error: Error.fromJson(json["error"]??{}),
-    data: Data.fromJson(json["data"]??{}),
-  );
-
-  Map<String, dynamic> toJson() => {
-    "status": status,
-    "message": message,
-    "error": error.toJson(),
-    "data": data.toJson(),
-  };
-}
-
-class Data {
-  int totalunread;
-  List<Result> results;
-
-  Data({
-    required this.totalunread,
-    required this.results,
-  });
-
-  factory Data.fromRawJson(String str) => Data.fromJson(json.decode(str));
-
-  String toRawJson() => json.encode(toJson());
-
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
-    totalunread: json["totalunread"],
-    results: List<Result>.from(json["results"].map((x) => Result.fromJson(x))??[]),
-  );
-
-  Map<String, dynamic> toJson() => {
-    "totalunread": totalunread,
-    "results": List<dynamic>.from(results.map((x) => x.toJson())),
-  };
-}
-
-class Result {
-  int id;
-  int userId;
-  dynamic image;
-  String title;
-  String description;
-  String readStatus;
-  DateTime createdAt;
-  DateTime updatedAt;
-  dynamic deletedAt;
-  bool? isSelected; // Add isSelected property
-
-  Result({
-    required this.id,
-    required this.userId,
-    required this.image,
-    required this.title,
-    required this.description,
-    required this.readStatus,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.deletedAt,
-    this.isSelected, // Include isSelected in the constructor
-  });
-
-  factory Result.fromRawJson(String str) => Result.fromJson(json.decode(str));
-
-  String toRawJson() => json.encode(toJson());
-
-  factory Result.fromJson(Map<String, dynamic> json) => Result(
-    id: json["id"]??0,
-    userId: json["user_id"]??0,
-    image: json["image"]??"",
-    title: json["title"]??"",
-    description: json["description"]??"",
-    readStatus: json["read_status"]??"",
-    createdAt: DateTime.parse(json["created_at"]),
-    updatedAt: DateTime.parse(json["updated_at"]),
-    deletedAt: json["deleted_at"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "user_id": userId,
-    "image": image,
-    "title": title,
-    "description": description,
-    "read_status": readStatus,
-    "created_at": createdAt.toIso8601String(),
-    "updated_at": updatedAt.toIso8601String(),
-    "deleted_at": deletedAt,
-  };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['status'] = status;
+    data['message'] = message;
+    if (error != null) {
+      data['error'] = error!.toJson();
+    }
+    if (this.data != null) {
+      data['data'] = this.data!.toJson();
+    }
+    return data;
+  }
 }
 
 class Error {
-  Error();
+  String? error;
 
-  factory Error.fromRawJson(String str) => Error.fromJson(json.decode(str));
+  Error({this.error});
 
-  String toRawJson() => json.encode(toJson());
+  Error.fromJson(Map<String, dynamic> json) {
+    error = json['error'];
+  }
 
-  factory Error.fromJson(Map<String, dynamic> json) => Error(
-  );
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['error'] = error;
+    return data;
+  }
+}
 
-  Map<String, dynamic> toJson() => {
-  };
+class NotificationData {
+  int? totalunread;
+  List<NotificationResult>? results;
+
+  NotificationData({this.totalunread, this.results});
+
+  NotificationData.fromJson(Map<String, dynamic> json) {
+    totalunread = json['totalunread'];
+    if (json['results'] != null) {
+      results = <NotificationResult>[];
+      json['results'].forEach((v) {
+        results!.add(NotificationResult.fromJson(v));
+      });
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['totalunread'] = totalunread;
+    if (results != null) {
+      data['results'] = results!.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
+
+class NotificationResult {
+  int? id;
+  int? userId;
+  String? image;
+  String? title;
+  String? description;
+  String? readStatus;
+  String? createdAt;
+  String? updatedAt;
+  String? deletedAt;
+
+  NotificationResult(
+      {this.id,
+        this.userId,
+        this.image,
+        this.title,
+        this.description,
+        this.readStatus,
+        this.createdAt,
+        this.updatedAt,
+        this.deletedAt});
+
+  NotificationResult.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    userId = json['user_id'];
+    image = json['image'];
+    title = json['title'];
+    description = json['description'];
+    readStatus = json['read_status'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
+    deletedAt = json['deleted_at'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['user_id'] = userId;
+    data['image'] = image;
+    data['title'] = title;
+    data['description'] = description;
+    data['read_status'] = readStatus;
+    data['created_at'] = createdAt;
+    data['updated_at'] = updatedAt;
+    data['deleted_at'] = deletedAt;
+    return data;
+  }
 }

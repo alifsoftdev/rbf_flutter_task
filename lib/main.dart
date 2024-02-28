@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
                // builder: (authController) {
                   return GetMaterialApp(
                     debugShowCheckedModeBanner: false,
-                    title: 'Golf Score',
+                    title: '',
                     themeMode: ThemeMode.system,
                     theme: themeController.themeValue ? dark : light,
                     locale: localizeController.locale,
@@ -72,7 +72,7 @@ class MyApp extends StatelessWidget {
       },
 
       //child: const DashboardScreen(),
-      child: const HomeScreen(),
+      child:  HomeScreen(),
     );
   }
 }
