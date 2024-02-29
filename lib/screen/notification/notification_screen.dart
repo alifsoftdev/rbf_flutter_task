@@ -1,3 +1,6 @@
+
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -21,143 +24,168 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
-    controller.loadNotifications();
-    controller.checkboxStates.assignAll(List.generate(controller.notifications.length, (index) => false));
+    //Get.find<NotificationController>().loadNotifications();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: ()=>Get.back,icon: Icon(Icons.arrow_back_ios_new)),
+        leading: IconButton(
+            onPressed: () => Get.back, icon: Icon(Icons.arrow_back_ios_new)),
         title: Text("Notification"),
         actions: [
-          Obx(()=>(controller.nEdite.isTrue)?
-          TextButton(onPressed: (){
-            controller.noticeEdite(true);
-          }, child:  Text("Cancel",style: TextStyle(color: Colors.purple),)):
-          IconButton(onPressed: (){
-            controller.noticeEdite(false);
-          }, icon: Icon(Icons.edit,color: Colors.purple,)),)
+          Obx(() => (controller.nEdite.isFalse)
+              ? IconButton(
+                  onPressed: () {
+                    controller.noticeEdite(true);
+                  },
+                  icon: Icon(
+                    Icons.edit,
+                    color: Colors.purple,
+                  ))
+              : TextButton(
+                  onPressed: () {
+                    controller.noticeEdite(false);
+                  },
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.purple),
+                  )))
         ],
       ),
-      body: Obx(
-            () => ListView.builder(
-          itemCount: controller.notifications.length,
-          itemBuilder: (context, index) {
-            var notification = controller.notifications[index];
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: controller.checkboxStates[index],
-                        onChanged: (value) {
-                          controller.toggleCheckbox(index);
-                        },
-                        activeColor: ColorResources.colorPerpel,
-                      ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 4.5.r,
-                                      backgroundColor: ColorResources.colorRed,
-                                    ),
-                                    addW(3.w),
-                                    Text(
-                                      notification.title ?? "",
-                                      style: TextStyle(
-                                        color: ColorResources.colorRed,
-                                        fontSize: 15.sp,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification scrollInfo) {
+          if (scrollInfo is ScrollEndNotification &&
+              scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+            // Load more notifications when scrolled to the end
+            controller.loadMoreNotifications();
+          }
+          return false;
+        },
+        child: Obx(
+          ()=> ListView.builder(
+            itemCount: controller.notifications.length,
+            itemBuilder: (context, index) {
+              var notification = controller.notifications[index];
+              bool isChecked = controller.checkboxStates[index];
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
+                    child: Row(
+                      children: [
+                        Obx(() => (controller.nEdite.isTrue)
+                            ? Checkbox(
+                          value: controller.checkboxStates[index],
+                          onChanged: (value) {
+                            controller.toggleCheckbox(index);
+                          },
+                          activeColor: ColorResources.colorPerpel,
+                        )
+                            : SizedBox.shrink()),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      if(notification.readStatus=="No")
+                                      CircleAvatar(
+                                        radius: 4.5.r,
+                                        backgroundColor: ColorResources.colorRed,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  /*notifications.createdAt.timeZoneName??*/ "",
-                                  style: TextStyle(
-                                    color: ColorResources.colorRed,
-                                    fontSize: 13.sp,
+                                      addW(3.w),
+                                      Text(
+                                        notification.title ?? "",
+                                        style: TextStyle(
+                                          color: ColorResources.colorRed,
+                                          fontSize: 15.sp,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                            addH(5.h),
-                            Text(
-                              notification.description ?? "",
-                              style: TextStyle(
-                                color: ColorResources.colorBlack,
-                                height: 1.2,
-                                fontSize: 16.sp,
+                                  Text(
+                                    /*notifications.createdAt.timeZoneName??*/ "",
+                                    style: TextStyle(
+                                      color: ColorResources.colorRed,
+                                      fontSize: 13.sp,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
+                              addH(5.h),
+                              Text(
+                                notification.description ?? "",
+                                style: TextStyle(
+                                  color: ColorResources.colorBlack,
+                                  height: 1.2,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Divider()
-              ],
-            );
-          },
-        ),
-      ),
-      bottomSheet: Obx(
-        ()=> Padding(
-          padding: EdgeInsets.fromLTRB(0, 10, 10, 10),
-          child: Row(
-            children: [
-              Checkbox(
-                value: controller.isMasterCheckboxSelected.value,
-                onChanged: (value) {
-                  controller.toggleMasterCheckbox();
-                },
-                activeColor: ColorResources.colorPerpel,
-              ),
-              const Text("All"),
-              const Expanded(child: SizedBox()),
-              SubmitButton(
-                title: "Delete",
-                onPressed: () {},
-                buttonStyle: ButtonStyle(
-                  padding: MaterialStateProperty.all(
-                    EdgeInsets.symmetric(horizontal: 15.w, vertical: 11.h),
-                  ),
-                  backgroundColor: MaterialStateProperty.all(
-                    (controller.selectedIndices.isNotEmpty)
-                        ? Colors.red.shade100
-                        : ColorResources.colorGreyWhite,
-                  ),
-                ),
-              ),
-              addW(5.w),
-              SubmitButton(
-                title: "Mark as read",
-                onPressed: () {},
-                buttonStyle: ButtonStyle(
-                  padding: MaterialStateProperty.all(
-                    EdgeInsets.symmetric(horizontal: 15.w, vertical: 11.h),
-                  ),
-                  backgroundColor: MaterialStateProperty.all(
-                    (controller.selectedIndices.isNotEmpty)
-                        ? Colors.red.shade100
-                        : ColorResources.colorGreyWhite,
-                  ),
-                ),
-              ),
-            ],
+                  Divider()
+                ],
+              );
+            },
           ),
         ),
       ),
+      bottomSheet: Obx(() => (controller.nEdite.isTrue)
+          ? Padding(
+              padding: EdgeInsets.fromLTRB(0, 10, 10, 10),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: controller.isMasterCheckboxSelected.value,
+                    onChanged: (value) {
+                      controller.toggleMasterCheckbox();
+                    },
+                    activeColor: ColorResources.colorPerpel,
+                  ),
+                  const Text("All"),
+                  const Expanded(child: SizedBox()),
+                  SubmitButton(
+                    title: "Delete",
+                    onPressed: () {
+                      controller.deleteSelectedNotifications();
+
+                    },
+                    buttonStyle: ButtonStyle(
+                      padding: MaterialStateProperty.all(
+                        EdgeInsets.symmetric(horizontal: 15.w, vertical: 11.h),
+                      ),
+                      backgroundColor: MaterialStateProperty.all(
+                          (controller.checkboxStates.isNotEmpty)
+                              ? ColorResources.colorGreyWhite
+                              : Colors.red.shade100),
+                    ),
+                  ),
+                  addW(5.w),
+                  SubmitButton(
+                    title: "Mark as read",
+                    onPressed: () {controller.markSelectedAsUnread();},
+                    buttonStyle: ButtonStyle(
+                      padding: MaterialStateProperty.all(
+                        EdgeInsets.symmetric(horizontal: 15.w, vertical: 11.h),
+                      ),
+                      backgroundColor: MaterialStateProperty.all(
+                          (controller.checkboxStates.isNotEmpty)
+                              ? ColorResources.colorGreyWhite
+                              : Colors.red.shade100),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink()),
     );
   }
 }

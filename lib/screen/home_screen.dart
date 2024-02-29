@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -7,13 +9,24 @@ import 'package:rbf_flutter_task/global/methods/methods.dart';
 import 'package:rbf_flutter_task/global/widgets/notificatin.dart';
 import 'package:rbf_flutter_task/screen/notification/notification_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   static const String id = "HomeScreen";
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> {
+  var notification;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    notification= NotificationController().notificationModel?.data?.totalunread??0;
+
+  }
   @override
   Widget build(BuildContext context) {
-    NotificationController notificationController=Get.find<NotificationController>();
 
     return Scaffold(
       backgroundColor: ColorResources.colorGreyWhite,
@@ -32,7 +45,7 @@ class HomeScreen extends StatelessWidget {
               Positioned(
                   top: 6.h,
                   right: 3.w,
-                  child: CustomNotification(count: notificationController.selectedIndex)),
+                  child: CustomNotification(count: notification)),
             ],),
           )
         ],

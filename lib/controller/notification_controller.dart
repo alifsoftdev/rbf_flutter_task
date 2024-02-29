@@ -14,7 +14,7 @@ import '../models/notification_model/result_model.dart';
 
  class NotificationController extends GetxController {
    RxBool pNotificationLoading = false.obs;
-   RxBool nEdite=true.obs;
+   RxBool nEdite=false.obs;
    RxString readStatus="".obs;
    RxList<int> selectedIndices = <int>[].obs;
 
@@ -177,14 +177,16 @@ import '../models/notification_model/result_model.dart';
    var notifications = <NotificationResult>[].obs;
    var currentPage = 1.obs;
    var loading = false.obs;
+   NotificationModel? notificationModel;
+
 
    @override
    void onInit() {
      super.onInit();
-     loadNotifications();
+     loadMoreNotifications();
    }
 
-   Future<void> loadNotifications() async {
+   Future<void> loadMoreNotifications() async {
      if (loading.value) return;
 
      loading.value = true;
@@ -195,17 +197,18 @@ import '../models/notification_model/result_model.dart';
        Dio dio = Dio();
        dio.options.headers['Authorization'] = 'Bearer ${loginModel?.data.token}';
        final response = await dio.get(
-         "${AppConstants.baseUrl}get_notification?page=${currentPage.value}&pageSize=10",
+         "${AppConstants.baseUrl}get_notification?page=${currentPage.value}&pageSize=2",
        );
 
+
        if (response.statusCode == 200) {
-         NotificationModel notificationModel = NotificationModel.fromJson(response.data);
-         notifications.addAll(notificationModel.data?.results ?? []);
+          notificationModel = NotificationModel.fromJson(response.data);
+         notifications.addAll(notificationModel?.data?.results ?? []);
          // Initialize checkbox states
          checkboxStates.addAll(List.generate(notifications.length, (index) => false));
          isMasterCheckboxSelected.value = false;
-
          currentPage.value++;
+         log("data ${notifications.length}");
        } else {
          print("Failed to load notifications. Status code: ${response.statusCode}");
        }
@@ -216,36 +219,30 @@ import '../models/notification_model/result_model.dart';
      }
    }
 
-   Future<void> refreshNotifications() async {
-     if (loading.value) return;
-
-     loading.value = true;
+   Future<void> updateNotificationStatus(List<int> notificationIds, String status) async {
      try {
        Dio dio = Dio();
        dio.options.headers['Authorization'] = 'Bearer ${loginModel?.data.token}';
-       var response = await dio.get(
-         "${AppConstants.baseUrl}get_notification?page=1&pageSize=10",
+       final response = await dio.post(
+         "${AppConstants.baseUrl}update_notification_status",
+         data: {
+           'notification_ids': notificationIds,
+           'status': status,
+         },
        );
 
        if (response.statusCode == 200) {
-         NotificationModel notificationModel = NotificationModel.fromJson(response.data);
-         notifications.assignAll(notificationModel.data?.results ?? []);
-         currentPage.value = 2;
+         // Handle success, maybe update the local data
+         print('Notification status updated successfully');
        } else {
-         print("Failed to load notifications. Status code: ${response.statusCode}");
+         print("Failed to update notification status. Status code: ${response.statusCode}");
        }
      } catch (error) {
-       print("An error occurred: $error");
-     } finally {
-       loading.value = false;
+       print("An error occurred while updating notification status: $error");
      }
    }
    RxBool isMasterCheckboxSelected = false.obs;
    RxList<bool> checkboxStates = <bool>[].obs;
-
-   //var notifications = <NotificationResult>[].obs;
-
-   // ... (rest of the code)
 
    void toggleMasterCheckbox() {
      isMasterCheckboxSelected.value = !isMasterCheckboxSelected.value;
@@ -266,25 +263,39 @@ import '../models/notification_model/result_model.dart';
      isMasterCheckboxSelected.value = checkboxStates.every((state) => state == true);
    }
 
-   void markSelectedAsRead() {
+   void markSelectedNotificationsAsRead() async {
+     List<int> selectedNotificationIds = [];
+     for (int i = 0; i < notifications.length; i++) {
+       if (checkboxStates[i]) {
+         selectedNotificationIds.add(notifications[i].id);
+       }
+     }
+
+     if (selectedNotificationIds.isNotEmpty) {
+       await updateNotificationStatus(selectedNotificationIds, 'Yes');
+       // Handle other logic, clear selection, reload data, etc.
+     } else {
+       // Handle case where no notifications are selected
+       print('No notifications selected');
+     }
+   }
+
+
+   void deleteSelectedNotifications() {
      // Get the indices of selected checkboxes
      List<int> selectedIndices = List.generate(checkboxStates.length, (index) => index)
          .where((index) => checkboxStates[index])
          .toList();
 
-     // Mark selected notifications as read
+     // Perform action to delete selected notifications
      selectedIndices.forEach((index) {
-       // You can add the logic to mark the notification as read, make an API call here
-       notifications[index].readStatus = "Read";
+       // Handle the logic to delete, you can make an API call here
+       // For demonstration, I'm removing the item from the list
+       notifications.removeAt(index);
      });
 
-     // Clear selection after marking as read
-     clearSelection();
-   }
-
-   void clearSelection() {
-     isMasterCheckboxSelected.value = false;
-     checkboxStates.assignAll(List.generate(notifications.length, (index) => false));
+     // After deleting, clear the selection
+     checkboxStates.remove(selectedIndices);
    }
 
  }
