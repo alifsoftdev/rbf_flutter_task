@@ -231,6 +231,7 @@ import '../models/notification_model/result_model.dart';
 
        if (response.statusCode == 200) {
          // Handle success, maybe update the local data
+         log('Notification Read${response.statusCode}');
          print('Notification status updated successfully');
        } else {
          print("Failed to update notification status. Status code: ${response.statusCode}");
@@ -265,10 +266,10 @@ import '../models/notification_model/result_model.dart';
      List<int> selectedNotificationIds = [];
      for (int i = 0; i < notifications.length; i++) {
        if (checkboxStates[i]) {
-         selectedNotificationIds.add(notifications[i].id);
+         selectedNotificationIds.add(notifications[i].id!);
+         checkboxStates.remove(selectedIndices);
        }
      }
-
      if (selectedNotificationIds.isNotEmpty) {
        await updateNotificationStatus(selectedNotificationIds, 'Yes');
        // Handle other logic, clear selection, reload data, etc.
@@ -293,7 +294,7 @@ import '../models/notification_model/result_model.dart';
      });
 
      // After deleting, clear the selection
-     checkboxStates.remove(selectedIndices);
+     selectedIndices.clear();
    }
 
  }

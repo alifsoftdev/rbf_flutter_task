@@ -57,7 +57,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: NotificationListener<ScrollNotification>(
         onNotification: (ScrollNotification scrollInfo) {
           if (scrollInfo is ScrollEndNotification &&
-              scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+              scrollInfo.metrics.maxScrollExtent == scrollInfo.metrics.maxScrollExtent) {
             // Load more notifications when scrolled to the end
             controller.loadMoreNotifications();
           }
@@ -92,11 +92,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      if(notification.readStatus=="No")
+                                      notification.readStatus=="No"?
                                       CircleAvatar(
                                         radius: 4.5.r,
                                         backgroundColor: ColorResources.colorRed,
-                                      ),
+                                      ):SizedBox.shrink(),
                                       addW(3.w),
                                       Text(
                                         notification.title ?? "",
@@ -107,8 +107,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                       ),
                                     ],
                                   ),
-                                  Text(
-                                    /*notifications.createdAt.timeZoneName??*/ "",
+                                  Text(notification.createdAt ?? "",
                                     style: TextStyle(
                                       color: ColorResources.colorRed,
                                       fontSize: 13.sp,
@@ -171,7 +170,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   addW(5.w),
                   SubmitButton(
                     title: "Mark as read",
-                    onPressed: () {controller.markSelectedAsUnread();},
+                    onPressed: () {controller.markSelectedNotificationsAsRead();},
                     buttonStyle: ButtonStyle(
                       padding: MaterialStateProperty.all(
                         EdgeInsets.symmetric(horizontal: 15.w, vertical: 11.h),
