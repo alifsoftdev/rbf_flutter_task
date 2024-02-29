@@ -90,8 +90,6 @@ import '../models/notification_model/result_model.dart';
      }
    }
 
-
-
 /*   /// Get Notification
    // RxList<NotificationMode> notificationList = <NotificationModel.Result>[].obs;
    RxList<Result> notificationList = <Result>[].obs;
@@ -177,14 +175,16 @@ import '../models/notification_model/result_model.dart';
    var notifications = <NotificationResult>[].obs;
    var currentPage = 1.obs;
    var loading = false.obs;
+   NotificationModel? notificationModel;
+
 
    @override
    void onInit() {
      super.onInit();
-     loadNotifications();
+     loadMoreNotifications();
    }
 
-   Future<void> loadNotifications() async {
+   Future<void> loadMoreNotifications() async {
      if (loading.value) return;
 
      loading.value = true;
@@ -204,8 +204,8 @@ import '../models/notification_model/result_model.dart';
          // Initialize checkbox states
          checkboxStates.addAll(List.generate(notifications.length, (index) => false));
          isMasterCheckboxSelected.value = false;
-
          currentPage.value++;
+         log("data ${notifications.length}");
        } else {
          print("Failed to load notifications. Status code: ${response.statusCode}");
        }
