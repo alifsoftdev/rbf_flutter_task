@@ -90,8 +90,6 @@ import '../models/notification_model/result_model.dart';
      }
    }
 
-
-
 /*   /// Get Notification
    // RxList<NotificationMode> notificationList = <NotificationModel.Result>[].obs;
    RxList<Result> notificationList = <Result>[].obs;
